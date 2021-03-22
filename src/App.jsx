@@ -14,6 +14,10 @@ import Conference from './Conference';
 import { HMSClient, HMSPeer, HMSClientConfig } from '@100mslive/hmsvideo-web';
 import { dependencies } from '../package.json';
 
+import Participant from './participant';
+import { isFunction } from 'formik';
+// import { FALSE, TRUE } from 'node-sass';
+
 const sdkVersion = dependencies['@100mslive/hmsvideo-web'].substring(1);
 console.info(
   `%c[APP] Using hmsvideo-web SDK version ${sdkVersion}`,
@@ -36,6 +40,7 @@ class App extends React.Component {
     super();
     this.client = null;
     this.isConnected = false;
+    this.role = 'Guest';
     this.state = {
       login: false,
       loading: false,
@@ -43,10 +48,13 @@ class App extends React.Component {
       localVideoEnabled: true,
       screenSharingEnabled: false,
       collapsed: true,
+      rightCollapsed : true,
       isFullScreen: false,
       vidFit: false,
       loginInfo: {},
       messages: [],
+      participantsList: [],
+      privateMessages: {}
     };
 
     this._settings = {
@@ -110,6 +118,9 @@ class App extends React.Component {
   };
 
   _handleJoin = async values => {
+    console.log(values);
+
+    console.log("handle join func");
     this.setState({ loading: true });
     let settings = this._settings;
     this.roomName = values.roomName;
@@ -144,6 +155,8 @@ class App extends React.Component {
 
     client.on('peer-join', (room, peer) => {
       this._notification('Peer Join', `peer => ${peer.name} joined ${room}!`);
+      
+      console.log(peer);
     });
 
     client.on('peer-leave', (room, peer) => {
@@ -152,6 +165,7 @@ class App extends React.Component {
 
     client.on('connect', () => {
       console.log('on connect called');
+
       if (this.isConnected) return;
       console.log('connected!');
       this._handleTransportOpen(values);
@@ -164,8 +178,11 @@ class App extends React.Component {
       });
     });
 
-    client.on('stream-add', (room, streamInfo) => {
-      console.log('stream-add %s,%s!', room, streamInfo.mid);
+    client.on('stream-add', (room, peer, streamInfo) => {
+      console.log('stream-add %s,%s,%s!', room, peer.peerId,peer.customerUserId);
+      this._updateParticipatantList(peer.customerUserId,peer.peerId);
+      console.log("participantlsit!!!!!");
+      console.log(this.state.participantsList);
     });
 
     client.on('stream-remove', (room, streamInfo) => {
@@ -174,7 +191,12 @@ class App extends React.Component {
 
     client.on('broadcast', (room, peer, message) => {
       console.log('broadcast: ', room, peer.name, message);
-      this._onMessageReceived(peer.name, message);
+      console.log(message);
+      console.log(peer);
+      if(message.msg === 'raise a hand')
+        this._raiseHand(peer.name);
+      else  
+        this._onMessageReceived(peer.name, message);
     });
 
     client.on('disconnected', async () => {
@@ -184,7 +206,11 @@ class App extends React.Component {
     });
 
     this.client = client;
+    console.log(this.client);
+    this.role = values.role;
   };
+
+
 
   _handleTransportOpen = async values => {
     this.isConnected = true;
@@ -208,6 +234,10 @@ class App extends React.Component {
         'Welcome to the 100ms room => ' + values.roomId
       );
       await this.conference.handleLocalStream(true);
+
+      //edited
+      this._updateParticipatantList(values.displayName, this.client.uid);
+    
     } catch (error) {
       console.error('HANDLE THIS ERROR: ', error);
     }
@@ -257,6 +287,13 @@ class App extends React.Component {
   _openOrCloseLeftContainer = collapsed => {
     this.setState({
       collapsed: collapsed,
+    });
+  };
+
+  //edited
+  _openOrCloseRightContainer = rightCollapsed => {
+    this.setState({
+      rightCollapsed: rightCollapsed,
     });
   };
 
@@ -351,26 +388,129 @@ class App extends React.Component {
   };
 
   _onMessageReceived = (from, message) => {
-    console.log('Received message:' + from + ':' + message);
-    let messages = this.state.messages;
+    console.log(message.type);
+    console.log("advs");
+    // console.log('Received message:' + from + ':' + message);
     let uid = 1;
-    messages.push(new Message({ id: uid, message: message, senderName: from }));
-    this.setState({ messages });
+
+    if(message.type === 'public'){
+      console.log("inside public messge");
+      let messages = this.state.messages;
+     
+      messages.push(new Message({ id: uid, message: message.msg, senderName: from }));
+      this.setState({ messages });
+    }
+    else {
+      if(message.receipentId != this.client.uid)
+      return 
+      
+      console.log("isnide priavteMsg");
+      let privateMessages = this.state.privateMessages;
+      console.log(privateMessages[message.senderId]);
+      if(typeof privateMessages[message.senderId] != 'undefined'){
+        privateMessages[message.senderId].push(new Message({ id: uid, message: message.msg, senderName: from }));
+        
+      }
+      
+        else {
+          console.log("insode else");
+          privateMessages[message.senderId]=[];
+          console.log(privateMessages[message.senderId])
+          // let uid
+          try{
+          (privateMessages[message.senderId]).push(new Message({ id: uid, message: message.msg, senderName: from }));
+        } catch(e){
+          console.log(e);
+        }
+          console.log(uid);
+          console.log(message.msg);
+          console.log(from);
+          console.log(privateMessages[message.senderId])
+        }
+        console.log(privateMessages);
+        try{
+          this.setState(prevState=>({ 
+            privateMessages : {
+              ...prevState.privateMessages,
+              [message.senderId] : privateMessages[message.senderId]
+            }
+          }))
+        } catch(e){console.log(e);}
+        console.log(this.state.privateMessages);
+    }
   };
 
   _onSendMessage = data => {
     console.log('Send message:' + data);
     var info = {
+      type: data.type,
       senderName: this.state.loginInfo.displayName,
-      msg: data,
+      msg: data.msg,
+      receipentId : data.receipentId,
+      senderId : this.client.uid
     };
+    console.log(info)
     this.client.broadcast(info, this.client.rid);
-    let messages = this.state.messages;
     let uid = 0;
-    messages.push(new Message({ id: uid, message: data, senderName: 'me' }));
-    this.setState({ messages });
+    if(data.type === 'public'){
+      let messages = this.state.messages;
+      messages.push(new Message({ id: uid, message: data.msg, senderName: 'me' }));
+      this.setState({ messages });
+    }
+
+    else{
+      let privateMessages = this.state.privateMessages;
+      if(typeof privateMessages[data.receipentId] != 'undefined'){
+        privateMessages[data.receipentId].push(new Message({ id: uid, message: data.msg, senderName: 'me' }));
+      }
+      else{
+          privateMessages[data.receipentId]=[];
+          console.log(privateMessages[data.receipentId])
+          // let uid
+          try{
+          (privateMessages[data.receipentId]).push(new Message({ id: uid, message: data.msg, senderName: 'me' }));
+        } catch(e){
+          console.log(e);
+        }
+      }
+      try{
+        this.setState(prevState=>({ 
+          privateMessages : {
+            ...prevState.privateMessages,
+            [data.receipentId] : privateMessages[data.receipentId]
+          }
+        }))
+      } catch(e){console.log(e);}
+      console.log(this.state.privateMessages);
+    }
   };
 
+  //edited
+  _onRaiseHand = ()=>{
+
+    console.log("inside onRaiseHand");
+    var info = {
+      type: "raise hand",
+      senderName: this.state.loginInfo.displayName,
+      msg: `raise a hand`,
+    };
+    this.client.broadcast(info,this.client.rid);
+  }
+
+  _raiseHand = (name) =>{
+    console.log("inside _raiseHand");
+    console.log(this.client);
+    if(this.role == 'Host')
+      this._notification("Raise Hand",`${name} has raise hand`);
+  }
+
+  //edited
+  _updateParticipatantList =(participantName, userId) =>{
+
+    let participantsList = this.state.participantsList;
+    participantsList.push(new Participant({id : userId, senderName : participantName}));
+    this.setState({participantsList});
+  }
   render() {
     const {
       login,
@@ -379,6 +519,7 @@ class App extends React.Component {
       localVideoEnabled,
       screenSharingEnabled,
       collapsed,
+      rightCollapsed,
       vidFit,
     } = this.state;
     return (
@@ -420,11 +561,16 @@ class App extends React.Component {
               >
                 <div className="left-container">
                   <ChatFeed
+                  messageType='public'
                     messages={this.state.messages}
                     onSendMessage={this._onSendMessage}
                   />
                 </div>
               </Sider>
+
+              
+
+
               <Layout className="app-right-layout">
                 <Content style={{ flex: 1, position: 'relative' }}>
                   <div>
@@ -432,6 +578,9 @@ class App extends React.Component {
                       roomName={this.roomName}
                       roomId={this.roomId}
                       collapsed={this.state.collapsed}
+                      
+                      //edited
+                      rightCollapsed = {this.state.rightCollapsed}
                       client={this.client}
                       settings={this._settings}
                       localAudioEnabled={localAudioEnabled}
@@ -451,10 +600,38 @@ class App extends React.Component {
                       }
                       isChatOpen={!this.state.collapsed}
                       cleanUp={this._cleanUp}
+
+                      //edited
+                      onRaiseHand={this._onRaiseHand}
+
+                      isPrivateChatOpen={!this.state.rightCollapsed}
+                      onPrivateChatToggle ={()=>
+                        this._openOrCloseRightContainer(!rightCollapsed)
+                      }
                     />
                   </div>
                 </Content>
               </Layout>
+              
+              <Sider
+                width={320}
+                collapsedWidth={0}
+                trigger={null}
+                collapsible
+                collapsed={this.state.rightCollapsed}
+                style={{ backgroundColor: '#0B0F15' }}
+              >
+                <div className="left-container">
+                  <ChatFeed
+                    messageType= 'private'
+                    messages={this.state.messages}
+                    onSendMessage={this._onSendMessage}
+                    participantsList = {this.state.participantsList}
+                    privateMessages = {this.state.privateMessages}
+                  />
+                </div>
+              </Sider>
+
             </Layout>
           ) : loading ? (
             <Spin size="large" tip="Connecting..." />

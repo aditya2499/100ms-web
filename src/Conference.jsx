@@ -384,6 +384,12 @@ class Conference extends React.Component {
           onChatToggle={this.props.onChatToggle}
           isChatOpen={this.props.isChatOpen}
           loginInfo={this.props.loginInfo}
+          
+          //edited part
+          onRaiseHand={this.props.onRaiseHand}
+          
+          onPrivateChatToggle = {this.props.onPrivateChatToggle}
+          isPrivateChatOpen = {this.props.isPrivateChatOpen}
         />
         {this.state.localStreamError && (
           <Modal

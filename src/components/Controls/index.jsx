@@ -21,6 +21,11 @@ const Controls = ({
   onLeave,
   onChatToggle,
   loginInfo,
+
+  //edited
+  onRaiseHand,
+  onPrivateChatToggle,
+  isPrivateChatOpen,
 }) => {
   return (
     <div
@@ -102,6 +107,58 @@ const Controls = ({
           isActive={isChatOpen}
         />
       </div>
+
+      {/* edited */}
+      <div className="mx-1">
+        <ControlButton
+          icon={<TelevisionIcon className="text-indigo-100" />}
+          activeIcon={<TelevisionOffIcon className="text-red-100" />}
+          label="Raise Hand"
+          //isActive={raiseHand}
+          onClick={onRaiseHand}
+        />
+      </div>
+
+      <div className="mx-1">
+        <ControlButton
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="white"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+              />
+            </svg>
+          }
+          activeIcon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="white"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+              />
+            </svg>
+          }
+          label="PersonalChat"
+          onClick={onPrivateChatToggle}
+          isActive={isPrivateChatOpen}
+        />
+      </div>
+
       <div className="ml-1">
         <ToolShare loginInfo={loginInfo} />
       </div>
