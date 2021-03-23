@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Modal, notification, Spin } from 'antd';
+import { Layout, Modal, notification, Spin , Button} from 'antd';
 const { confirm } = Modal;
 const { Header, Content, Sider } = Layout;
 import { reactLocalStorage } from 'reactjs-localstorage';
@@ -16,7 +16,7 @@ import { dependencies } from '../package.json';
 
 import Participant from './participant';
 import { isFunction } from 'formik';
-// import { FALSE, TRUE } from 'node-sass';
+import Poll from './components/Poll/form'
 
 const sdkVersion = dependencies['@100mslive/hmsvideo-web'].substring(1);
 console.info(
@@ -35,6 +35,12 @@ async function getToken({ room_id, user_name, role = 'guest', env }) {
   return token;
 }
 
+// const pollQuestion = 'Is react-polls useful?'
+// const pollAnswers = [
+//   { option: 'Yes', votes: 8 },
+//   { option: 'No', votes: 2 }
+// ]
+
 class App extends React.Component {
   constructor() {
     super();
@@ -49,12 +55,17 @@ class App extends React.Component {
       screenSharingEnabled: false,
       collapsed: true,
       rightCollapsed : true,
+      pollCollapsed: true,
       isFullScreen: false,
       vidFit: false,
       loginInfo: {},
       messages: [],
       participantsList: [],
-      privateMessages: {}
+      privateMessages: {},
+      isPollActive:false,
+      pollOptionsVote:{},
+      voted : false,
+      selectOptionId : -1,
     };
 
     this._settings = {
@@ -195,6 +206,12 @@ class App extends React.Component {
       console.log(peer);
       if(message.msg === 'raise a hand')
         this._raiseHand(peer.name);
+      else if(message.type == 'poll ended')
+        this._endPoll();
+      else if(message.type == 'poll created')
+        this._onActivatePoll()
+      else if(message.type == 'poll selcted option')
+        this._updatePollVotes(message.id);  
       else  
         this._onMessageReceived(peer.name, message);
     });
@@ -296,6 +313,11 @@ class App extends React.Component {
       rightCollapsed: rightCollapsed,
     });
   };
+  _openOrClosePollBox = pollCollapsed =>{
+    this.setState({
+      pollCollapsed : pollCollapsed,
+    })
+  }
 
   _onVidFitClickHandler = () => {
     this.setState({
@@ -511,6 +533,79 @@ class App extends React.Component {
     participantsList.push(new Participant({id : userId, senderName : participantName}));
     this.setState({participantsList});
   }
+
+  _sendSelectedOptionPoll = id=>{
+    this.setState({voted : true})
+    this.setState({selectedOptionId : id})
+    this._updatePollVotes(id);
+    var info = {
+      type: "poll selcted option",
+      senderName: this.state.loginInfo.displayName,
+      id : id,
+    };
+    this.client.broadcast(info,this.client.rid);
+  }
+
+  _endPoll =() =>{
+    // this.setState({isPollActive : false})
+    // this.setState({voted : false})
+    // this.setState({selectOptionId : -1})
+    this.setState({
+      isPollActive : false,
+      voted : false,
+      selectedOptionId : -1
+    })
+    this._notification('Poll has ended','')
+  }
+
+  _onEndPoll = ()=>{
+    
+    this._endPoll();
+    // this.setState({voted : false})
+    // this.setState({selectOptionId : -1})
+    var info = {
+      type: "poll ended",
+      senderName: this.state.loginInfo.displayName,
+      // id : id,
+    };
+    this.client.broadcast(info,this.client.rid)
+    console.log(this.state.pollOptionsVote)
+    
+  }
+  _onActivatePoll = async ()=>{
+    await this.setState({isPollActive: true})
+    console.log(this.state.isPollActive)
+    this._notification("Poll has been Created","")
+  }
+  _createPoll=async ()=>{
+    console.log("inside cratePoll");
+    await this._onActivatePoll();
+    var info = {
+      type: "poll created",
+      senderName: this.state.loginInfo.displayName,
+      // id : id,
+    };
+    this.client.broadcast(info,this.client.rid)
+    
+  }
+
+  _updatePollVotes=(id) =>{
+    let pollOptionsVote = this.state.pollOptionsVote;
+    let selectedOptionId =id;
+    let currentVote=0
+    if(typeof pollOptionsVote[selectedOptionId] == 'undefined')
+      currentVote=1;
+    else currentVote = pollOptions[selectedOptionId] + 1;
+    
+    this.setState(prevState =>({
+      pollOptionsVote : {
+        ...prevState.pollOptionsVote,
+        [selectedOptionId] : currentVote 
+      }
+    }))
+    console.log(this.state.pollOptionsVote)
+  }
+
   render() {
     const {
       login,
@@ -520,7 +615,9 @@ class App extends React.Component {
       screenSharingEnabled,
       collapsed,
       rightCollapsed,
+      pollCollapsed,
       vidFit,
+      isPollActive
     } = this.state;
     return (
       <Layout className="app-layout">
@@ -580,6 +677,7 @@ class App extends React.Component {
                       collapsed={this.state.collapsed}
                       
                       //edited
+                      pollCollapsed = {this.state.pollCollapsed}
                       rightCollapsed = {this.state.rightCollapsed}
                       client={this.client}
                       settings={this._settings}
@@ -605,13 +703,45 @@ class App extends React.Component {
                       onRaiseHand={this._onRaiseHand}
 
                       isPrivateChatOpen={!this.state.rightCollapsed}
+                      isPollBoxOpen={!this.state.pollCollapsed}
                       onPrivateChatToggle ={()=>
-                        this._openOrCloseRightContainer(!rightCollapsed)
+                        this._openOrCloseRightContainer(!rightCollapsed) 
                       }
+                      onPollBoxToggle={()=>{
+                        this._openOrClosePollBox(!pollCollapsed)
+                      }}
+
+                      // onPollCreate={this._onPollCreate} 
                     />
                   </div>
                 </Content>
               </Layout>
+
+              <Sider
+                width={320}
+                collapsedWidth={0}
+                trigger={null}
+                collapsible
+                collapsed={this.state.pollCollapsed}
+                style={{ backgroundColor: '#0B0F15' }}
+              >
+                {/* <div>
+                  {
+                    isPollActive ?(
+                  <> */}
+                  <Poll 
+                    question={this.state.pollQuestion} 
+                    options={this.state.pollOptions} 
+                    onVote={this._sendSelectedOptionPoll} 
+                    isPollActive={this.state.isPollActive}
+                    endPoll = {this._onEndPoll}
+                    createPoll = {this._createPoll}
+                    voted={this.state.voted}
+                    pollVotes={this.state.pollOptionsVote}
+                    role={this.role}
+                    />
+                
+              </Sider>
               
               <Sider
                 width={320}
@@ -621,6 +751,26 @@ class App extends React.Component {
                 collapsed={this.state.rightCollapsed}
                 style={{ backgroundColor: '#0B0F15' }}
               >
+                {/* <div>
+                  {
+                    isPollActive ?(
+                  <> */}
+                  {/* <Poll 
+                    question={this.state.pollQuestion} 
+                    options={this.state.pollOptions} 
+                    onVote={this._sendSelectedOptionPoll} 
+                    isPollActive={this.state.isPollActive}
+                    endPoll = {this._onEndPoll}
+                    createPoll = {this._createPoll}
+                    voted={this.state.voted}
+                    pollVotes={this.state.pollOptionsVote}
+                    role={this.role}
+                    /> */}
+                    {/* </>)
+
+                    :(<Button onClick={this._createPoll}> Create POll</Button>)
+                  }
+                </div> */}
                 <div className="left-container">
                   <ChatFeed
                     messageType= 'private'

@@ -126,6 +126,9 @@
   flex-direction: column;
   flex: 1;
   overflow: hidden;
+  // height:300px;
+  overflow-y: scroll;
+  // overflow-x: hidden;
   background-color: #555555;
 }
 
@@ -140,7 +143,8 @@
 }
 
 .chat-history {
-  overflow-y: auto;
+  // overflow-y: auto;
+  overflow-y : auto;
   overflow-x: hidden;
   flex: 1;
 }

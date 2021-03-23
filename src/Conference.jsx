@@ -387,9 +387,11 @@ class Conference extends React.Component {
           
           //edited part
           onRaiseHand={this.props.onRaiseHand}
-          
+          // onPollCreate={this.props.onPollCreate}
           onPrivateChatToggle = {this.props.onPrivateChatToggle}
           isPrivateChatOpen = {this.props.isPrivateChatOpen}
+          isPollBoxOpen = {this.props.isPollBoxOpen}
+          onPollBoxToggle={ this.props.onPollBoxToggle}
         />
         {this.state.localStreamError && (
           <Modal

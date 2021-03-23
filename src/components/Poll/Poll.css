@@ -1,0 +1,49 @@
+  
+.poll {
+   font-size: 0.9rem;
+ }
+ .poll ul {
+   padding: 0;
+   width: 300px;
+   margin: auto;
+ }
+ .poll ul li {
+   list-style: none;
+   border: 2px solid #00ddf9;
+   border-radius: 3px;
+   line-height: 1rem;
+   margin-bottom: 1rem;
+   width: 100%;
+ }
+ .poll ul li button {
+   border: none;
+   background: transparent;
+   outline: none;
+   color: #fff;
+   height: 100%;
+   width: 100%;
+   display: block;
+   padding: 15px;
+   font-size: 1rem;
+   font-weight: bold;
+ }
+ .poll ul li span {
+   display: none;
+ }
+ .poll ul.results li {
+   border-color: #999;
+ }
+ .title-panel {
+   display: flex;
+   align-items: center;
+   height: 36px;
+   padding-top: 4px;
+   border-bottom-width: 1px;
+   border-bottom-style: solid;
+   border-bottom-color: #888888;
+ }
+ .title-chat {
+   font-size: 16px;
+   color: #fff;
+   margin-left: 10px;
+ }

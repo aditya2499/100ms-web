@@ -26,6 +26,9 @@ const Controls = ({
   onRaiseHand,
   onPrivateChatToggle,
   isPrivateChatOpen,
+  onPollBoxToggle,
+  isPollBoxOpen,
+  onPollCreate
 }) => {
   return (
     <div
@@ -116,6 +119,16 @@ const Controls = ({
           label="Raise Hand"
           //isActive={raiseHand}
           onClick={onRaiseHand}
+        />
+      </div>
+
+      <div className="mx-1">
+        <ControlButton
+          icon={<TelevisionIcon className="text-indigo-100" />}
+          activeIcon={<TelevisionOffIcon className="text-red-100" />}
+          label="Poll Create"
+          isActive={isPollBoxOpen}
+          onClick={onPollBoxToggle}
         />
       </div>
 

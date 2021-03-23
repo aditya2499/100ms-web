@@ -33,7 +33,7 @@ export default class ChatFeed extends Component {
     this.state = {
       messageType: props.messageType,
       messages: props.messages || [],
-      currentParticipantName: "Everyone",
+      currentParticipantName: "Select the participant",
       currentParticpantId: null, 
       participantsList: props.participantsList || [],
       privateMessages : props.privateMessages || {}
@@ -168,15 +168,17 @@ export default class ChatFeed extends Component {
     return (
       <div
         id="chat-panel"
-        className="flex flex-1 flex-col"
+        className="chat-panel"
+        ref='chat'
         style={{ backgroundColor: '#000000' }}
       >
-        <div className="title-panel">
-          <span className="title-chat">Chat</span>
-        </div>
+        
 
         {isPrivate ?(
         <>
+        <div className="title-panel">
+          <span className="title-chat"> Priavte Chat</span>
+        </div>
         <Dropdown className="title-panel" overlay={menu}>
           <a className="ant-dropdown-link" className="title-chat" onClick={e => e.preventDefault()}>
             {this.state.currentParticipantName} 
@@ -194,11 +196,17 @@ export default class ChatFeed extends Component {
         </>
         )
         :(
+          <>
+          <div className="title-panel">
+          <span className="title-chat">Chat</span>
+        </div>
+
           <div ref="chat" className="chat-history">
            
           <div>{this._renderMessages(this.props.messages)}</div>
           
           </div>
+          </>
           )
         }
 
