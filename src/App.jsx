@@ -35,12 +35,6 @@ async function getToken({ room_id, user_name, role = 'guest', env }) {
   return token;
 }
 
-// const pollQuestion = 'Is react-polls useful?'
-// const pollAnswers = [
-//   { option: 'Yes', votes: 8 },
-//   { option: 'No', votes: 2 }
-// ]
-
 class App extends React.Component {
   constructor() {
     super();
@@ -547,9 +541,6 @@ class App extends React.Component {
   }
 
   _endPoll =() =>{
-    // this.setState({isPollActive : false})
-    // this.setState({voted : false})
-    // this.setState({selectOptionId : -1})
     this.setState({
       isPollActive : false,
       voted : false,
@@ -561,8 +552,6 @@ class App extends React.Component {
   _onEndPoll = ()=>{
     
     this._endPoll();
-    // this.setState({voted : false})
-    // this.setState({selectOptionId : -1})
     var info = {
       type: "poll ended",
       senderName: this.state.loginInfo.displayName,
@@ -725,10 +714,6 @@ class App extends React.Component {
                 collapsed={this.state.pollCollapsed}
                 style={{ backgroundColor: '#0B0F15' }}
               >
-                {/* <div>
-                  {
-                    isPollActive ?(
-                  <> */}
                   <Poll 
                     question={this.state.pollQuestion} 
                     options={this.state.pollOptions} 
@@ -751,26 +736,7 @@ class App extends React.Component {
                 collapsed={this.state.rightCollapsed}
                 style={{ backgroundColor: '#0B0F15' }}
               >
-                {/* <div>
-                  {
-                    isPollActive ?(
-                  <> */}
-                  {/* <Poll 
-                    question={this.state.pollQuestion} 
-                    options={this.state.pollOptions} 
-                    onVote={this._sendSelectedOptionPoll} 
-                    isPollActive={this.state.isPollActive}
-                    endPoll = {this._onEndPoll}
-                    createPoll = {this._createPoll}
-                    voted={this.state.voted}
-                    pollVotes={this.state.pollOptionsVote}
-                    role={this.role}
-                    /> */}
-                    {/* </>)
-
-                    :(<Button onClick={this._createPoll}> Create POll</Button>)
-                  }
-                </div> */}
+                  
                 <div className="left-container">
                   <ChatFeed
                     messageType= 'private'
