@@ -101,26 +101,6 @@ export default class ChatFeed extends Component {
     })
   }
 
-
-
-  // RenderParticipantList= ({participantsList})=>{
-  //   const list = participantsList.map((participant)=>{
-           
-  //     // <div>
-  //     <Menu.Item key={participant.id}>{participant.senderName}</Menu.Item>
-  //     {/* <li>--{cmnt.author} {cmnt.date}</li> */}
-  //     // </div>
-      
-   
-  // })
-  //   return (
-  //     <Menu onClick={this._updateTargetParticipant}>
-  //     {list}
-  //     </Menu>
-       
-  //    )
-  // }
-
   render() {
 
     const{
@@ -129,23 +109,10 @@ export default class ChatFeed extends Component {
 
     const isPrivate = this.state.messageType=='private' ? true : false;
     console.log(isPrivate)
-  //   const list = (this.props.participantsList.map((participant)=>{
-         
-  //       //  <div>
-  //        <Menu.Item key={participant.id}>{participant.senderName}</Menu.Item>
-  //        {/* <li>--{cmnt.author} {cmnt.date}</li> */}
-  //        {/* </div> */}
-         
-      
-  //  }))
   console.log("menu")
     console.log(this.state.participantsList)
     const menu = (
       <Menu onClick={this._updateTargetParticipant}>
-        {/* <Menu.Item key="1">1st menu item</Menu.Item>
-        <Menu.Item key="2">2nd menu item</Menu.Item>
-        <Menu.Item key="3">3rd menu item</Menu.Item> */}
-       {/* <RenderParticipantList participantsList = {this.props.participantsList}/> */}
         {
           this.state.participantsList.map((participant)=>{
             return <Menu.Item key={participant.id}>{participant.name}</Menu.Item>
