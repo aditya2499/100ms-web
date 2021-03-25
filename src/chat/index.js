@@ -190,5 +190,4 @@ ChatFeed.propTypes = {
   isTyping: PropTypes.bool,
   messages: PropTypes.array.isRequired,
   onSendMessage: PropTypes.func.isRequired,
-  // participantsList: PropTypes.array.isRequired
 };
